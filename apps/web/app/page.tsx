@@ -1,6 +1,7 @@
 import Hero from "@/components/sections/hero";
 import Features from "@/components/sections/features";
 import { Testimonials } from "@/components/sections/Testimonials";
+import Footer from "@/components/sections/footer";
 
 export default function Home() {
   return (
@@ -19,6 +20,7 @@ export default function Home() {
           <button className="border px-4 py-2 rounded-md font-bold">View Prices</button>
         </div>
       </div>
+      <Footer />
     </>
   );
 }

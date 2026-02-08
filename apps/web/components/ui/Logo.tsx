@@ -1,10 +1,39 @@
+'use client'
 import React from 'react'
 import { GraduationCap } from "lucide-react"
+import { useGSAP } from '@gsap/react'
+import gsap from 'gsap'
 const Logo = () => {
+    const { contextSafe } = useGSAP()
+    const hatRef = React.useRef<SVGSVGElement | null>(null);
+
+    const onClickAnimation = contextSafe(() => {
+        if (!hatRef.current) return;
+        // Animate jump: up with rotate, then down with rotate back
+        gsap.fromTo(
+            hatRef.current,
+            { y: 0, rotation: 0 },
+            {
+                y: -30,
+                rotation: 360,
+                duration: 0.5,
+                ease: "power2.out",
+                yoyo: true,
+                repeat: 1,
+            }
+        );
+    });
+
     return (
         <div className='flex items-center gap-3'>
-            <div className="w-fit bg-main p-2 rounded-md ">
-                <GraduationCap width={35} height={35} />
+            <div className="w-fit bg-main p-2 rounded-md">
+                <GraduationCap
+                    ref={hatRef}
+                    onClick={onClickAnimation}
+                    width={35}
+                    height={35}
+                    style={{ cursor: 'pointer' }}
+                />
             </div>
             <p className='text-2xl font-bold'>EduStream</p>
         </div>
