@@ -6,7 +6,7 @@ import MainButton from "./ui/MainButton";
 
 const NavBar = () => {
   return (
-    <div className="py-2 px-4 flex justify-between items-center w-full fixed NavBG">
+    <div className="py-2 px-4 flex justify-between items-center w-full fixed NavBG z-50">
       <Logo />
       <div className="gap-5 hidden md:flex">
         {routes.map((route) => (
