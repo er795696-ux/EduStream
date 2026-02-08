@@ -3,6 +3,7 @@ import React from 'react'
 import { GraduationCap } from "lucide-react"
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap'
+import Link from 'next/link'
 const Logo = () => {
     const { contextSafe } = useGSAP()
     const hatRef = React.useRef<SVGSVGElement | null>(null);
@@ -35,7 +36,7 @@ const Logo = () => {
                     style={{ cursor: 'pointer' }}
                 />
             </div>
-            <p className='text-2xl font-bold'>EduStream</p>
+            <Link href={'/'} className='text-2xl font-bold'>EduStream</Link>
         </div>
     )
 }

@@ -1,10 +1,14 @@
 'use client'
 import { useGSAP } from '@gsap/react'
 import gsap from 'gsap';
+import Link from 'next/link';
 import { useRef } from 'react'
 
-const NavRoute = ({ route, underLineOnHover }: { route: string, underLineOnHover: boolean }) => {
-
+const NavRoute = ({
+    route,
+    underLineOnHover,
+    href = '#',
+}: { route: string; underLineOnHover: boolean; href?: string }) => {
     const underline = useRef<HTMLSpanElement | null>(null);
 
     // Animate width on hover in, and reset on hover out
@@ -36,7 +40,7 @@ const NavRoute = ({ route, underLineOnHover }: { route: string, underLineOnHover
             onMouseEnter={underLineOnHover ? onHover : undefined}
             onMouseLeave={underLineOnHover ? onLeave : undefined}
         >
-            <p className="text-white">{route}</p>
+            <Link href={href} className="text-white">{route}</Link>
             {underLineOnHover && (
                 <span
                     ref={underline}

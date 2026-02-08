@@ -14,7 +14,7 @@ const NavBar = () => {
         ))}
       </div>
       <div className="flex items-center gap-3">
-        <NavRoute underLineOnHover={false} route="Login" />
+        <NavRoute underLineOnHover={false} href="/login" route="Login" />
         <MainButton text="Get Started" />
       </div>
     </div>
