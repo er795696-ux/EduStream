@@ -2,10 +2,12 @@ import Hero from "@/components/sections/hero";
 import Features from "@/components/sections/features";
 import { Testimonials } from "@/components/sections/Testimonials";
 import Footer from "@/components/sections/footer";
+import NavBar from "@/components/NavBar";
 
 export default function Home() {
   return (
     <>
+      <NavBar />
       <Hero />
       <Features />
       <Testimonials />
