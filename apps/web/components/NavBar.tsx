@@ -8,7 +8,7 @@ const NavBar = () => {
   return (
     <div className="py-2 px-4 flex justify-between items-center w-full fixed NavBG">
       <Logo />
-      <div className="flex gap-2">
+      <div className="flex gap-5">
         {routes.map((route) => (
           <NavRoute key={route} underLineOnHover route={route} />
         ))}
