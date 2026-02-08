@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
+import { useGSAP } from "@gsap/react";
+import gsap from "gsap";
+import NavBar from "@/components/NavBar";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -21,9 +24,14 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  gsap.registerPlugin(useGSAP);
+
+
+
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} dark:bg-black dark:text-white`}>
+      <body className={`${geistSans.variable} ${geistMono.variable} dark:text-white h-dvh`}>
+        <NavBar />
         {children}
       </body>
     </html>
