@@ -16,8 +16,6 @@ router.post('/register', registerController);
  * @access Public
  */
 router.post('/login', loginController);
-router.get('/login', (req, res) => {
-    res.send("authenticate")
-});
+
 
 export default router;
