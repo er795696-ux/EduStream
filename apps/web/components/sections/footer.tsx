@@ -1,3 +1,5 @@
+'use client'
+import { GIFtext } from "../ui/GIFtext"
 import Logo from "../ui/Logo"
 import NavRoute from "../ui/NavBar/NavRoute"
 
@@ -11,7 +13,7 @@ const Footer = () => {
                 <NavRoute underLineOnHover route="Terms of Service" />
                 <NavRoute underLineOnHover route="Support" />
             </div>
-            <p className="text-slate-400">@ 2026 EduStream Inc. All rights reserved.</p>
+            <p className="text-slate-400">@ <GIFtext GifName="happy-cat.gif" >2026</GIFtext> EduStream Inc. All rights reserved.</p>
         </div>
     )
 }

@@ -1,7 +1,9 @@
+'use client'
 import Image from 'next/image'
 import React from 'react'
 import MainButton from '../ui/MainButton'
 import { CirclePlay } from 'lucide-react'
+import { GIFtext } from '../ui/GIFtext'
 
 const Hero = () => {
     return (
@@ -20,9 +22,11 @@ const Hero = () => {
                     <div className="mt-3">
                         <div className="flex gap-2 justify-center md:justify-start md:block">
                             <h1 className="text-white text-2xl sm:text-4xl md:text-6xl xl:text-8xl font-bold">Learn.</h1>
-                            <h1 className="text-2xl sm:text-4xl md:text-6xl xl:text-8xl font-bold bg-linear-to-r from-blue-600 to-violet-500 bg-clip-text text-transparent">
-                                Collaborate.
-                            </h1>
+                            <GIFtext GifName='twerken-twerk.gif' width={120} height={120}>
+                                <h1 className="text-2xl sm:text-4xl md:text-6xl xl:text-8xl font-bold bg-linear-to-r from-blue-600 to-violet-500 bg-clip-text text-transparent">
+                                    Collaborate.
+                                </h1>
+                            </GIFtext>
                             <h1 className="text-white text-2xl sm:text-4xl md:text-6xl xl:text-8xl font-bold">Succeed.</h1>
 
                         </div>

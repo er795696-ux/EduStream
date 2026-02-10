@@ -4,6 +4,7 @@ import { useRef } from "react";
 import { ArrowBigLeft, ArrowBigRight, Star } from 'lucide-react'
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { GIFtext } from "../ui/GIFtext";
 
 export const Testimonials: React.FC = () => {
     const scrollRef = useRef<HTMLDivElement>(null);
@@ -25,7 +26,7 @@ export const Testimonials: React.FC = () => {
                 <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
                     <div>
                         <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Success Stories</h2>
-                        <p className="mt-4 text-lg text-slate-400">Hear from the academic leaders transforming their institutions.</p>
+                        <p className="mt-4 text-lg text-slate-400">Hear from the <GIFtext GifName="eating.gif" height={60} width={60}>academic leaders</GIFtext> transforming their institutions.</p>
                     </div>
                     <div className="flex gap-2">
                         <button
