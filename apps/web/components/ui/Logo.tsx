@@ -18,9 +18,16 @@ const Logo = () => {
                 y: -30,
                 rotation: 360,
                 duration: 0.5,
-                ease: "power2.out",
-                yoyo: true,
-                repeat: 1,
+                ease: "power1.in",
+                onComplete: () => {
+                    // Land back down after jump with a smooth effect
+                    gsap.to(hatRef.current, {
+                        y: 0,
+                        rotation: 360 * 2,
+                        duration: 0.5,
+                        ease: "power2.out",
+                    });
+                }
             }
         );
     });
