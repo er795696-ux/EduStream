@@ -1,14 +1,22 @@
 'use client'
 
-import React from 'react'
+import React, { useActionState } from 'react'
 import Logo from '@/components/ui/Logo'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
+import { LoginAction } from './action'
+
+
+const initialState = {
+    errors: {} as { email?: string[] }
+}
 
 const LoginPage = () => {
     const [showPassword, setShowPassword] = React.useState(false)
-    const [email, setEmail] = React.useState('')
-    const [password, setPassword] = React.useState('')
+
+
+    const [state, formAction, pending] = useActionState(LoginAction, initialState)
+    console.log(state);
 
     return (
         <div className="min-h-screen gradient-bg dark:bg-dark bg-slate-50 flex flex-col items-center justify-center px-4 py-8">
@@ -31,7 +39,7 @@ const LoginPage = () => {
                     </div>
 
                     {/* Form */}
-                    <form className="space-y-6" onSubmit={(e) => e.preventDefault()}>
+                    <form className="space-y-6" action={formAction}>
                         {/* Email Input */}
                         <div>
                             <label
@@ -45,13 +53,10 @@ const LoginPage = () => {
                                     <Mail className="h-5 w-5 text-slate-500 dark:text-slate-400" />
                                 </div>
                                 <input
-                                    id="email"
+                                    name="email"
                                     type="email"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
                                     className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all"
                                     placeholder="you@example.com"
-                                    required
                                 />
                             </div>
                         </div>
@@ -69,18 +74,15 @@ const LoginPage = () => {
                                     <Lock className="h-5 w-5 text-slate-500 dark:text-slate-400" />
                                 </div>
                                 <input
-                                    id="password"
+                                    name="password"
                                     type={showPassword ? 'text' : 'password'}
-                                    value={password}
-                                    onChange={(e) => setPassword(e.target.value)}
                                     className="w-full pl-10 pr-12 py-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all"
                                     placeholder="Enter your password"
-                                    required
                                 />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
+                                    className={`absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-color`}
                                 >
                                     {showPassword ? (
                                         <EyeOff className="h-5 w-5" />
@@ -95,7 +97,7 @@ const LoginPage = () => {
                         <div className="flex items-center justify-between flex-wrap gap-2">
                             <div className="flex items-center">
                                 <input
-                                    id="remember"
+                                    name="remember"
                                     type="checkbox"
                                     className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-white/10 text-main focus:ring-main focus:ring-offset-0"
                                 />
@@ -117,7 +119,8 @@ const LoginPage = () => {
                         {/* Login Button */}
                         <button
                             type="submit"
-                            className="w-full bg-main hover:bg-main/90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg shadow-main/30 hover:shadow-main/50"
+                            className={`w-full bg-main hover:bg-main/90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg shadow-main/30 hover:shadow-main/50 ${pending ? "opacity-50 cursor-progress" : ""}`}
+
                         >
                             Sign In
                         </button>
