@@ -1,53 +1,84 @@
 'use server'
 
 import { apiBaseUrl } from '@/config/env';
+import { loginReturnAction } from '@/types/login-return';
 import { post } from '@/util/api';
 import { z } from 'zod'
 
 const schema = z.object({
     email: z.string().email('Invalid Email'),
+    password: z.string().min(2, 'Password is required')
 })
 
-export const LoginAction = async (state: any, formData: FormData) => {
+export const LoginAction = async (state: any, formData: FormData): Promise<loginReturnAction> => {
     const rawFormData = {
-        email: formData.get('email'),
-        password: formData.get('password'),
+        email: formData.get('email')?.toString() || '',
+        password: formData.get('password')?.toString() || '',
         remember: !!formData.get('remember'),
     }
-    const validatedFields = schema.safeParse({
-        email: formData.get('email'),
-    })
+    const validatedFields = schema.safeParse(rawFormData)
 
     console.log(rawFormData);
 
     // Return early if the form data is invalid
     if (!validatedFields.success) {
         console.log(validatedFields.error.flatten().fieldErrors);
-
         return {
             errors: validatedFields.error.flatten().fieldErrors,
+            values: {
+                ...rawFormData
+            },
+            success: false
         }
     }
 
-    // Call the backend API for login
-    // Assume util/api has been set up to call the backend API and is available for import at the top of the file,
-    // but since imports aren't allowed at this point, we'll assume `post` is in scope.
-    // The backend login route is usually something like '/api/auth/login'.
-    // We'll pretend the endpoint is at `${process.env.NEXT_PUBLIC_API_URL}/auth/login`
-    // but if you need to adjust this path, do so to fit your actual API.
 
-    // To use 'post', you must ensure it is imported at the top: import { post } from "@/util/api"
-    // const loginEndpoint = `${apiBaseUrl}/api/auth/login`;
+    const loginEndpoint = `${apiBaseUrl}/api/auth/login`;
 
-    // const response = await post(
-    //     loginEndpoint,
-    //     {
-    //         email: rawFormData.email,
-    //         password: rawFormData.password,
-    //         remember: rawFormData.remember,
-    //     }
-    // );
+    try {
+        const result = await post<{
+            token: string,
+            user: {
+                id: number,
+                name: string,
+                email: string
+            }
+        }>(
+            loginEndpoint,
+            {
+                email: rawFormData.email,
+                password: rawFormData.password,
+                remember: rawFormData.remember,
+            }
+        );
+
+        if (!result.ok) {
+            return {
+                success: false,
+                errors: {
+                    api: result.error.error.message,
+                    Errorcode: result.error.error.code
+                },
+                values: {
+                    ...rawFormData
+                }
+            }
+        } else
+            return {
+                success: true,
+                data: result
+            }
+    } catch (error: any) {
+        return {
+            errors: {
+                api: `Catch: ${error.message}` || 'Signup failed. Please try again.'
+            },
+            success: false,
+            values: {
+                ...rawFormData
+            }
+        }
+    }
 
 
-    // console.log(response)
 }

@@ -5,10 +5,21 @@ import Logo from '@/components/ui/Logo'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import { LoginAction } from './action'
+import { loginReturnAction } from '@/types/login-return'
+import { useToastAction } from '@/hooks/useToast'
+import toast from 'react-hot-toast'
+import Input from '@/components/ui/Input'
+import PasswordInput from '@/components/ui/PasswordInput'
 
 
-const initialState = {
-    errors: {} as { email?: string[] }
+const initialState: loginReturnAction = {
+    errors: {},
+    values: {
+        email: '',
+        password: '',
+        remember: false
+    },
+    success: false
 }
 
 const LoginPage = () => {
@@ -16,6 +27,28 @@ const LoginPage = () => {
 
 
     const [state, formAction, pending] = useActionState(LoginAction, initialState)
+
+    useToastAction<loginReturnAction>({
+        state: state,
+        pending,
+        onSuccess: () => {
+            toast.dismiss('signup-loading');
+            toast.success('Logged-in successfully!');
+        },
+        onError: () => {
+            if (state.success) return
+            if (state.errors?.api) {
+                if (state.errors.Errorcode === 500)
+                    toast.error("It's not you, it's us. please try again later");
+                else
+                    toast.error(state.errors.api ?? "There was an issue logging-in the account");
+            }
+            else {
+                toast.error("There was an invalid field");
+            }
+        }
+    })
+
 
     return (
         <div className="min-h-screen gradient-bg dark:bg-dark bg-slate-50 flex flex-col items-center justify-center px-4 py-8">
@@ -47,17 +80,14 @@ const LoginPage = () => {
                             >
                                 Email Address
                             </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-                                </div>
-                                <input
-                                    name="email"
-                                    type="email"
-                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all"
-                                    placeholder="you@example.com"
-                                />
-                            </div>
+                            <Input
+                                icon={<Mail className="h-5 w-5 text-slate-500 dark:text-slate-400" />}
+                                id='email'
+                                placeholder='email'
+                                defaultValue={!state.success ? state.values?.email : ''}
+                                type='text'
+                                isError={!state.success ? !!state.errors.email : false}
+                            />
                         </div>
 
                         {/* Password Input */}
@@ -68,28 +98,12 @@ const LoginPage = () => {
                             >
                                 Password
                             </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-                                </div>
-                                <input
-                                    name="password"
-                                    type={showPassword ? 'text' : 'password'}
-                                    className="w-full pl-10 pr-12 py-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all"
-                                    placeholder="Enter your password"
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className={`absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-color`}
-                                >
-                                    {showPassword ? (
-                                        <EyeOff className="h-5 w-5" />
-                                    ) : (
-                                        <Eye className="h-5 w-5" />
-                                    )}
-                                </button>
-                            </div>
+                            <PasswordInput
+                                icon={<Lock className="h-5 w-5 text-slate-500 dark:text-slate-400" />}
+                                id='password'
+                                placeholder='Enter your password'
+                                defaultValue={!state.success ? state.values?.password : ''}
+                                isError={!state.success ? !!state.errors.password : false} />
                         </div>
 
                         {/* Remember Me & Forgot Password */}
@@ -99,6 +113,7 @@ const LoginPage = () => {
                                     name="remember"
                                     type="checkbox"
                                     className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-white/10 text-main focus:ring-main focus:ring-offset-0"
+                                    id='remember'
                                 />
                                 <label
                                     htmlFor="remember"
@@ -119,7 +134,7 @@ const LoginPage = () => {
                         <button
                             type="submit"
                             className={`w-full bg-main hover:bg-main/90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg shadow-main/30 hover:shadow-main/50 ${pending ? "opacity-50 cursor-progress" : ""}`}
-
+                            disabled={pending}
                         >
                             Sign In
                         </button>

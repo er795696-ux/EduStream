@@ -80,18 +80,14 @@ export const login = async (data: LoginDTO): Promise<AuthResponse> => {
   });
 
   if (!user) {
-    const error = new Error('Invalid credentials') as any;
-    error.statusCode = 401;
-    throw error;
+    ThrowError(401, "Invalid credentials")
   }
 
   // Compare password
   const isPasswordValid = await comparePassword(data.password, user.password);
 
   if (!isPasswordValid) {
-    const error = new Error('Invalid credentials') as any;
-    error.statusCode = 401;
-    throw error;
+    ThrowError(401, "Invalid credentials")
   }
 
   // Generate JWT token
