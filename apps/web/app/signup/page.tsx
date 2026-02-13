@@ -1,26 +1,56 @@
 'use client'
 
-import React from 'react'
+import React, { useActionState } from 'react'
 import Logo from '@/components/ui/Logo'
 import { Mail, Lock, Eye, EyeOff, User } from 'lucide-react'
 import Link from 'next/link'
+import { SignupAction } from './action'
+import toast from 'react-hot-toast'
+import { signupReturnAction } from '@/types/signup-return'
+import Input from '@/components/ui/Input'
+import PasswordInput from '@/components/ui/PasswordInput'
+import { useToastAction } from '@/hooks/useToast'
 
-const SignupPage = () => {
-    const [showPassword, setShowPassword] = React.useState(false)
-    const [showConfirmPassword, setShowConfirmPassword] = React.useState(false)
-    const [formData, setFormData] = React.useState({
+const initialState: signupReturnAction = {
+    errors: {},
+    values: {
         name: '',
         email: '',
         password: '',
-        confirmPassword: ''
-    })
+        confirmPassword: '',
+        terms: false,
+    },
+    success: false,
+};
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({
-            ...formData,
-            [e.target.id]: e.target.value
-        })
-    }
+const SignupPage = () => {
+    const [state, formAction, pending] = useActionState(SignupAction, initialState)
+
+    useToastAction<signupReturnAction>({
+        state: state,
+        pending,
+        onSuccess: () => {
+            toast.dismiss('signup-loading');
+            toast.success('Account created successfully!');
+        },
+        onError: () => {
+            if (state.success) return
+            if (state.errors?.api) {
+                if (state.errors.Errorcode === 500)
+                    toast.error("It's not you, it's us. please try again later");
+                else
+                    toast.error(state.errors.api ?? "There was an issue creating the account");
+            }
+            else if (state.errors?.terms)
+                toast("You have to accept the terms and conditions to create the account", {
+                    icon: '⛔',
+                    duration: 3000,
+                });
+            else {
+                toast.error("There was an invalid field");
+            }
+        }
+    })
 
     return (
         <div className="min-h-screen gradient-bg dark:bg-dark bg-slate-50 flex flex-col items-center justify-center px-4 py-8">
@@ -43,7 +73,7 @@ const SignupPage = () => {
                     </div>
 
                     {/* Form */}
-                    <form className="space-y-5" onSubmit={(e) => e.preventDefault()}>
+                    <form className="space-y-5" action={formAction}>
                         {/* Name Input */}
                         <div>
                             <label
@@ -52,20 +82,14 @@ const SignupPage = () => {
                             >
                                 Full Name
                             </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <User className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-                                </div>
-                                <input
-                                    id="name"
-                                    type="text"
-                                    value={formData.name}
-                                    onChange={handleChange}
-                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all"
-                                    placeholder="John Doe"
-                                    required
-                                />
-                            </div>
+                            <Input
+                                defaultValue={state.values?.name}
+                                icon={<User className="h-5 w-5 text-slate-500 dark:text-slate-400" />}
+                                id='name'
+                                type='text'
+                                placeholder="John Doe"
+                                isError={!state.success ? !!state.errors?.name : false}
+                            />
                         </div>
 
                         {/* Email Input */}
@@ -76,20 +100,14 @@ const SignupPage = () => {
                             >
                                 Email Address
                             </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Mail className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-                                </div>
-                                <input
-                                    id="email"
-                                    type="email"
-                                    value={formData.email}
-                                    onChange={handleChange}
-                                    className="w-full pl-10 pr-4 py-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all"
-                                    placeholder="you@example.com"
-                                    required
-                                />
-                            </div>
+                            <Input
+                                id="email"
+                                icon={<Mail className="h-5 w-5 text-slate-500 dark:text-slate-400" />}
+                                type="email"
+                                placeholder="you@example.com"
+                                defaultValue={state.values?.email}
+                                isError={!state.success ? !!state.errors?.email : false}
+                            />
                         </div>
 
                         {/* Password Input */}
@@ -100,31 +118,13 @@ const SignupPage = () => {
                             >
                                 Password
                             </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-                                </div>
-                                <input
-                                    id="password"
-                                    type={showPassword ? 'text' : 'password'}
-                                    value={formData.password}
-                                    onChange={handleChange}
-                                    className="w-full pl-10 pr-12 py-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all"
-                                    placeholder="Create a password"
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
-                                >
-                                    {showPassword ? (
-                                        <EyeOff className="h-5 w-5" />
-                                    ) : (
-                                        <Eye className="h-5 w-5" />
-                                    )}
-                                </button>
-                            </div>
+                            <PasswordInput
+                                id="password"
+                                icon={<Lock className="h-5 w-5 text-slate-500 dark:text-slate-400" />}
+                                placeholder='Create a password'
+                                defaultValue={state.values?.password}
+                                isError={!state.success ? !!state.errors?.password : false}
+                            />
                         </div>
 
                         {/* Confirm Password Input */}
@@ -135,44 +135,36 @@ const SignupPage = () => {
                             >
                                 Confirm Password
                             </label>
-                            <div className="relative">
-                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                    <Lock className="h-5 w-5 text-slate-500 dark:text-slate-400" />
-                                </div>
-                                <input
-                                    id="confirmPassword"
-                                    type={showConfirmPassword ? 'text' : 'password'}
-                                    value={formData.confirmPassword}
-                                    onChange={handleChange}
-                                    className="w-full pl-10 pr-12 py-3 bg-slate-50 dark:bg-white/5 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-main focus:border-transparent transition-all"
-                                    placeholder="Confirm your password"
-                                    required
-                                />
-                                <button
-                                    type="button"
-                                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors"
-                                >
-                                    {showConfirmPassword ? (
-                                        <EyeOff className="h-5 w-5" />
-                                    ) : (
-                                        <Eye className="h-5 w-5" />
-                                    )}
-                                </button>
-                            </div>
+                            <PasswordInput
+                                icon={<Lock className="h-5 w-5 text-slate-500 dark:text-slate-400" />}
+                                placeholder='Confirm your password'
+                                id='confirmPassword'
+                                defaultValue={state.values?.confirmPassword}
+                                isError={!state.success ? !!state.errors?.confirmPassword : false}
+                            />
                         </div>
 
                         {/* Terms and Conditions */}
                         <div className="flex items-start">
                             <input
                                 id="terms"
+                                name="terms"
                                 type="checkbox"
-                                className="w-4 h-4 rounded border-slate-300 dark:border-white/20 bg-white dark:bg-white/10 text-main focus:ring-main focus:ring-offset-0 mt-1"
-                                required
+                                className={
+                                    `w-4 h-4 rounded bg-white dark:bg-white/10 text-main focus:ring-main focus:ring-offset-0 mt-1
+                                    border-slate-300 dark:border-white/20
+                                    ${!state.success && state.errors?.terms ? "border-red-500 focus:ring-red-500 dark:border-red-400" : ""}`
+                                }
+                                aria-invalid={!state.success && !!state.errors?.terms}
                             />
                             <label
                                 htmlFor="terms"
-                                className="ml-2 text-sm text-slate-700 dark:text-slate-300"
+                                className={
+                                    `ml-2 text-sm 
+                                    ${!state.success && state.errors?.terms
+                                        ? "text-red-600 dark:text-red-400"
+                                        : "text-slate-700 dark:text-slate-300"}`
+                                }
                             >
                                 I agree to the{' '}
                                 <a href="#" className="text-main hover:text-main/80 font-medium">

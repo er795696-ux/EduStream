@@ -33,7 +33,13 @@ export const getAllAnnouncementsController = async (
     next: NextFunction
 ) => {
     try {
-        const announcements = await announcementService.getAllAnnouncements();
+        const classId = Number(req.query.classId);
+        
+        if (!classId || isNaN(classId)) {
+             return res.status(400).json({ error: 'Class ID is required' });
+        }
+
+        const announcements = await announcementService.getAllAnnouncements(classId);
         return res.status(200).json(announcements);
     } catch (error) {
         next(error);

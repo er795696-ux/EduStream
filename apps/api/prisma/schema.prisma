@@ -7,7 +7,7 @@ datasource db {
   provider = "postgresql"
 }
 
-enum Role {
+enum ClassRole {
   TEACHER
   STUDENT
 }
@@ -17,17 +17,54 @@ model User {
   name          String
   email         String         @unique
   password      String
-  role          Role
   createdAt     DateTime       @default(now())
   updatedAt     DateTime       @updatedAt
   
   // Relations
+  classes       ClassMembership[]
   announcements Announcement[]
   materials     Material[]
   assignments   Assignment[]
   submissions   Submission[]
+  ownedClasses  Class[] // Classes created by this user
   
   @@index([email])
+}
+
+model Class {
+  id          Int      @id @default(autoincrement())
+  name        String
+  description String?
+  code        String   @unique // 6-digit code
+  ownerId     Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  owner       User              @relation(fields: [ownerId], references: [id])
+  members     ClassMembership[]
+  announcements Announcement[]
+  materials     Material[]
+  assignments   Assignment[]
+
+  @@index([code])
+  @@index([ownerId])
+}
+
+model ClassMembership {
+  id        Int       @id @default(autoincrement())
+  userId    Int
+  classId   Int
+  role      ClassRole
+  joinedAt  DateTime  @default(now())
+
+  // Relations
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  class     Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, classId])
+  @@index([userId])
+  @@index([classId])
 }
 
 model Announcement {
@@ -35,14 +72,17 @@ model Announcement {
   title     String
   content   String    @db.Text
   teacherId Int
+  classId   Int
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   
   // Relations
   teacher   User      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  class     Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
   comments  Comment[]
   
   @@index([teacherId])
+  @@index([classId])
 }
 
 model Comment {
@@ -64,14 +104,17 @@ model Material {
   fileUrl    String
   category   String
   uploadedBy Int
+  classId    Int
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   
   // Relations
   uploader   User     @relation(fields: [uploadedBy], references: [id], onDelete: Cascade)
+  class      Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
   
   @@index([category])
   @@index([uploadedBy])
+  @@index([classId])
 }
 
 model Assignment {
@@ -81,14 +124,17 @@ model Assignment {
   dueDate     DateTime
   fileUrl     String?
   teacherId   Int
+  classId     Int
   createdAt   DateTime     @default(now())
   updatedAt   DateTime     @updatedAt
   
   // Relations
   teacher     User         @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  class       Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
   submissions Submission[]
   
   @@index([teacherId])
+  @@index([classId])
   @@index([dueDate])
 }
 

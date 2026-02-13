@@ -6,6 +6,7 @@ export interface CreateAssignmentDTO {
   description: string;
   dueDate: Date;
   teacherId: number;
+  classId: number;
   fileUrl?: string | null;
 }
 
@@ -30,6 +31,7 @@ export const createAssignment = async (data: CreateAssignmentDTO) => {
       description: data.description,
       dueDate: data.dueDate,
       teacherId: data.teacherId,
+      classId: data.classId,
       fileUrl: data.fileUrl ?? null,
     },
     include: {
@@ -47,11 +49,15 @@ export const createAssignment = async (data: CreateAssignmentDTO) => {
 };
 
 /**
- * Get all assignments with teacher information
+ * Get all assignments for a class
+ * @param classId - Class ID
  * @returns Promise resolving to array of assignments ordered by due date ascending
  */
-export const getAllAssignments = async () => {
+export const getAllAssignments = async (classId: number) => {
   const assignments = await prisma.assignment.findMany({
+    where: {
+      classId,
+    },
     include: {
       teacher: {
         select: {

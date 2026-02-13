@@ -2,7 +2,14 @@ import axios, { AxiosRequestConfig, AxiosResponse } from 'axios';
 
 type ApiResult<T> =
     | { ok: true; data: T; error: null }
-    | { ok: false; data: null; error: string };
+    | {
+        ok: false; data: null; error: {
+            error: {
+                message: string,
+                code: number
+            }
+        }
+    };
 
 export async function get<T = any>(
     url: string,

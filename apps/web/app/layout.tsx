@@ -3,7 +3,7 @@ import localFont from "next/font/local";
 import "./globals.css";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
-import NavBar from "@/components/NavBar";
+import { Toaster } from "react-hot-toast";
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -32,6 +32,9 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} dark:text-white dark:bg-dark h-dvh`}>
         {children}
+        <Toaster
+          position="bottom-right"
+        />
       </body>
     </html>
   );

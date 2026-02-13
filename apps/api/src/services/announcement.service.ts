@@ -4,6 +4,7 @@ export interface CreateAnnouncementDTO {
   title: string;
   content: string;
   teacherId: number;
+  classId: number;
 }
 
 export const createAnnouncement = async (data: CreateAnnouncementDTO) => {
@@ -12,6 +13,7 @@ export const createAnnouncement = async (data: CreateAnnouncementDTO) => {
       title: data.title,
       content: data.content,
       teacherId: data.teacherId,
+      classId: data.classId,
     },
     include: {
       teacher: {
@@ -27,8 +29,11 @@ export const createAnnouncement = async (data: CreateAnnouncementDTO) => {
   return announcement;
 };
 
-export const getAllAnnouncements = async () => {
+export const getAllAnnouncements = async (classId: number) => {
   const announcements = await prisma.announcement.findMany({
+    where: {
+      classId,
+    },
     orderBy: {
       createdAt: 'desc',
     },

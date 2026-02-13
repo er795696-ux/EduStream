@@ -34,137 +34,40 @@ export const errorHandler = (
 ): void => {
   // Log errors in development mode
   if (process.env.NODE_ENV === 'development') {
-    console.error('Error occurred:', {
-      name: err.name,
-      message: err.message,
-      stack: err.stack,
-    });
+    console.error('Error occurred:', err);
   }
 
-  // Handle Zod validation errors
-  if (err instanceof ZodError) {
-    const validationErrors: Record<string, string> = {};
-    err.issues.forEach((issue) => {
-      const path = issue.path.join('.');
-      validationErrors[path] = issue.message;
-    });
+  /**
+   * If the error object has `statusCode` or `code` and `message`, use them.
+   * Allow caller to use e.g. ThrowError(404, "user not found") or similar.
+   * 
+   * The convention is:
+   *   - err.statusCode or err.code (code is usually string or number)
+   *   - err.message
+   */
+  const status = (typeof (err as any).statusCode === 'number')
+    ? (err as any).statusCode
+    : (typeof (err as any).code === 'number'
+      ? (err as any).code
+      : 500);
 
-    res.status(400).json({
-      error: {
-        message: 'Validation failed',
-        code: 'VALIDATION_ERROR',
-        details: validationErrors,
-      },
-    });
-    return;
-  }
-
-  // Handle Prisma errors
-  if (err instanceof PrismaClientKnownRequestError) {
-    // Unique constraint violation
-    if (err.code === 'P2002') {
-      const target = (err.meta?.target as string[]) || [];
-      const field = target[0] || 'field';
-      
-      res.status(409).json({
-        error: {
-          message: `A record with this ${field} already exists`,
-          code: 'DUPLICATE_ENTRY',
-          details: { field },
-        },
-      });
-      return;
-    }
-
-    // Record not found
-    if (err.code === 'P2025') {
-      res.status(404).json({
-        error: {
-          message: 'Resource not found',
-          code: 'NOT_FOUND',
-        },
-      });
-      return;
-    }
-
-    // Foreign key constraint violation
-    if (err.code === 'P2003') {
-      res.status(400).json({
-        error: {
-          message: 'Invalid reference to related resource',
-          code: 'INVALID_REFERENCE',
-        },
-      });
-      return;
-    }
-
-    // Generic Prisma error
-    res.status(500).json({
-      error: {
-        message: 'Database operation failed',
-        code: 'DATABASE_ERROR',
-      },
-    });
-    return;
-  }
-
-  // Handle Multer errors
-  if (err instanceof MulterError) {
-    // File size limit exceeded
-    if (err.code === 'LIMIT_FILE_SIZE') {
-      res.status(400).json({
-        error: {
-          message: 'File size exceeds the maximum limit of 10MB',
-          code: 'FILE_TOO_LARGE',
-        },
-      });
-      return;
-    }
-
-    // Unexpected field
-    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
-      res.status(400).json({
-        error: {
-          message: 'Unexpected file field',
-          code: 'INVALID_FILE_FIELD',
-        },
-      });
-      return;
-    }
-
-    // Generic Multer error
-    res.status(400).json({
-      error: {
-        message: 'File upload failed',
-        code: 'FILE_UPLOAD_ERROR',
-        details: { reason: err.message },
-      },
-    });
-    return;
-  }
-
-  // Handle custom ApiError
-  if (err instanceof ApiError) {
-    res.status(err.statusCode).json({
-      error: {
-        message: err.message,
-        code: err.isOperational ? 'OPERATIONAL_ERROR' : 'INTERNAL_ERROR',
-      },
-    });
-    return;
-  }
-
-  // Handle unexpected errors (500)
-  // Don't expose internal details in production
   const message =
-    process.env.NODE_ENV === 'development'
-      ? err.message
+    (typeof (err as any).message === 'string' && (err as any).message.length > 0)
+      ? (err as any).message
       : 'An unexpected error occurred';
 
-  res.status(500).json({
+  res.status(status).json({
     error: {
       message,
-      code: 'INTERNAL_SERVER_ERROR',
+      code: (typeof (err as any).customCode === 'string'
+        ? (err as any).customCode
+        : (typeof (err as any).code === 'string'
+          ? (err as any).code
+          : status)),
+      // Optionally attach details if provided on the error
+      ...(typeof (err as any).details === 'object' && (err as any).details
+        ? { details: (err as any).details }
+        : {}),
     },
   });
 };

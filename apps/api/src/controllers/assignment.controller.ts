@@ -36,6 +36,7 @@ export const createAssignmentController = async (
       description: validatedData.description,
       dueDate,
       teacherId,
+      classId: validatedData.classId,
       fileUrl,
     });
 
@@ -62,7 +63,7 @@ export const createAssignmentController = async (
 };
 
 /**
- * Get all assignments
+ * Get all assignments for a class
  * @route GET /api/assignments
  */
 export const getAllAssignmentsController = async (
@@ -71,8 +72,15 @@ export const getAllAssignmentsController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
+    const classId = Number(req.query.classId);
+
+    if (!classId || isNaN(classId)) {
+      res.status(400).json({ error: 'Class ID is required' });
+      return;
+    }
+
     // Call service
-    const assignments = await getAllAssignments();
+    const assignments = await getAllAssignments(classId);
 
     // Return 200 with assignments array
     res.status(200).json(assignments);

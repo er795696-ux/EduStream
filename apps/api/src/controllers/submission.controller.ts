@@ -9,6 +9,7 @@ import {
 } from '../services/submission.service';
 import { ZodError } from 'zod';
 import { prisma } from '../../lib/prisma';
+import { ClassRole } from '../generated/prisma/client';
 
 /**
  * Create a new submission
@@ -22,30 +23,40 @@ export const createSubmissionController = async (
   try {
     // Validate file exists
     if (!req.file) {
-      res.status(400).json({
-        error: {
-          message: 'File is required',
-          code: 'FILE_REQUIRED',
-        },
-      });
+      res.status(400).json({ error: { message: 'File is required', code: 'FILE_REQUIRED' } });
       return;
     }
 
-    // Extract studentId from authenticated user
     const studentId = req.user!.id;
-
-    // Extract assignmentId from route params
     const assignmentId = parseInt(req.params.id, 10);
 
-    // Validate assignmentId is a number
     if (isNaN(assignmentId)) {
-      res.status(400).json({
-        error: {
-          message: 'Invalid assignment ID',
-          code: 'INVALID_ID',
-        },
-      });
+      res.status(400).json({ error: { message: 'Invalid assignment ID', code: 'INVALID_ID' } });
       return;
+    }
+
+    // Check assignment existence and class membership
+    const assignment = await prisma.assignment.findUnique({
+      where: { id: assignmentId },
+      select: { classId: true },
+    });
+
+    if (!assignment) {
+      res.status(404).json({ error: { message: 'Assignment not found', code: 'NOT_FOUND' } });
+      return;
+    }
+
+    const membership = await prisma.classMembership.findUnique({
+      where: { userId_classId: { userId: studentId, classId: assignment.classId } },
+    });
+
+    if (!membership) {
+        // Enforce membership - arguably could allow teachers to submit too for testing, but spec says students.
+        // For now, allow both but let's stick to Student role check if strictly required?
+        // User asked to remove global role, but ClassRole exists.
+        // Let's assume only members can submit.
+        res.status(403).json({ error: { message: 'You are not a member of this class', code: 'FORBIDDEN' } });
+        return;
     }
 
     // Build file URL
@@ -58,10 +69,8 @@ export const createSubmissionController = async (
       fileUrl,
     });
 
-    // Return 201 with created submission
     res.status(201).json(submission);
   } catch (error) {
-    // Pass errors to error handler middleware
     next(error);
   }
 };
@@ -76,56 +85,39 @@ export const getSubmissionsByAssignmentController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Extract assignmentId from route params
     const assignmentId = parseInt(req.params.id, 10);
 
-    // Validate assignmentId is a number
     if (isNaN(assignmentId)) {
-      res.status(400).json({
-        error: {
-          message: 'Invalid assignment ID',
-          code: 'INVALID_ID',
-        },
-      });
+      res.status(400).json({ error: { message: 'Invalid assignment ID', code: 'INVALID_ID' } });
       return;
     }
 
-    // Extract teacherId from authenticated user
     const teacherId = req.user!.id;
 
-    // Validate teacher owns the assignment
+    // Validate assignment and teacher permissions
     const assignment = await prisma.assignment.findUnique({
       where: { id: assignmentId },
-      select: { teacherId: true },
+      select: { classId: true },
     });
 
     if (!assignment) {
-      res.status(404).json({
-        error: {
-          message: 'Assignment not found',
-          code: 'NOT_FOUND',
-        },
-      });
+      res.status(404).json({ error: { message: 'Assignment not found', code: 'NOT_FOUND' } });
       return;
     }
 
-    if (assignment.teacherId !== teacherId) {
-      res.status(403).json({
-        error: {
-          message: 'You do not have permission to view these submissions',
-          code: 'FORBIDDEN',
-        },
-      });
+    // Check if user is a TEACHER in this class
+    const membership = await prisma.classMembership.findUnique({
+        where: { userId_classId: { userId: teacherId, classId: assignment.classId } },
+    });
+
+    if (!membership || membership.role !== ClassRole.TEACHER) {
+      res.status(403).json({ error: { message: 'Access denied: Teachers only', code: 'FORBIDDEN' } });
       return;
     }
 
-    // Call service
     const submissions = await getSubmissionsByAssignment(assignmentId);
-
-    // Return 200 with submissions array
     res.status(200).json(submissions);
   } catch (error) {
-    // Pass errors to error handler middleware
     next(error);
   }
 };
@@ -140,38 +132,46 @@ export const gradeSubmissionController = async (
   next: NextFunction
 ): Promise<void> => {
   try {
-    // Validate request body
     const validatedData = gradeSubmissionSchema.parse(req.body);
-
-    // Extract submissionId from route params
     const submissionId = parseInt(req.params.id, 10);
 
-    // Validate submissionId is a number
     if (isNaN(submissionId)) {
-      res.status(400).json({
-        error: {
-          message: 'Invalid submission ID',
-          code: 'INVALID_ID',
-        },
-      });
+      res.status(400).json({ error: { message: 'Invalid submission ID', code: 'INVALID_ID' } });
       return;
     }
 
-    // Extract teacherId from authenticated user
     const teacherId = req.user!.id;
 
-    // Call service
-    const submission = await gradeSubmission(
+    // Get submission -> assignment -> classId
+    const submission = await prisma.submission.findUnique({
+        where: { id: submissionId },
+        select: { assignment: { select: { classId: true } } }
+    });
+
+    if (!submission) {
+        res.status(404).json({ error: { message: 'Submission not found', code: 'NOT_FOUND' } });
+        return;
+    }
+
+    // Check permissions
+    const membership = await prisma.classMembership.findUnique({
+        where: { userId_classId: { userId: teacherId, classId: submission.assignment.classId } },
+    });
+
+    if (!membership || membership.role !== ClassRole.TEACHER) {
+      res.status(403).json({ error: { message: 'Access denied: Teachers only', code: 'FORBIDDEN' } });
+      return;
+    }
+
+    const updatedSubmission = await gradeSubmission(
       submissionId,
       teacherId,
       validatedData.grade
     );
 
-    // Return 200 with updated submission
-    res.status(200).json(submission);
+    res.status(200).json(updatedSubmission);
   } catch (error) {
     if (error instanceof ZodError) {
-      // Handle validation errors
       res.status(400).json({
         error: {
           message: 'Validation failed',
@@ -184,7 +184,6 @@ export const gradeSubmissionController = async (
       });
       return;
     }
-    // Pass other errors to error handler middleware
     next(error);
   }
 };

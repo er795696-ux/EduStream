@@ -44,6 +44,7 @@ export const createMaterialController = async (
       category: validatedData.category,
       fileUrl,
       uploadedBy: teacherId,
+      classId: validatedData.classId,
     });
 
     // Return 201 with created material
@@ -69,9 +70,9 @@ export const createMaterialController = async (
 };
 
 /**
- * Get all materials or filter by category
+ * Get all materials or filter by category for a class
  * @route GET /api/materials
- * @route GET /api/materials?category=X
+ * @route GET /api/materials?category=X&classId=Y
  */
 export const getAllMaterialsController = async (
   req: AuthRequest,
@@ -81,14 +82,20 @@ export const getAllMaterialsController = async (
   try {
     // Check for category query parameter
     const category = req.query.category as string | undefined;
+    const classId = Number(req.query.classId);
+
+    if (!classId || isNaN(classId)) {
+      res.status(400).json({ error: 'Class ID is required' });
+      return;
+    }
 
     let materials;
     if (category) {
       // Filter by category
-      materials = await getMaterialsByCategory(category);
+      materials = await getMaterialsByCategory(classId, category);
     } else {
       // Get all materials
-      materials = await getAllMaterials();
+      materials = await getAllMaterials(classId);
     }
 
     // Return 200 with materials array

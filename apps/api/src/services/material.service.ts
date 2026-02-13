@@ -5,6 +5,7 @@ export interface CreateMaterialDTO {
   category: string;
   fileUrl: string;
   uploadedBy: number;
+  classId: number;
 }
 
 export interface MaterialResponse {
@@ -32,6 +33,7 @@ export const createMaterial = async (
       category: data.category,
       fileUrl: data.fileUrl,
       uploadedBy: data.uploadedBy,
+      classId: data.classId,
     },
     include: {
       uploader: {
@@ -56,10 +58,14 @@ export const createMaterial = async (
 
 /**
  * Get all materials with uploader name, ordered by createdAt desc
+ * @param classId - Class ID
  * @returns Promise resolving to array of materials
  */
-export const getAllMaterials = async (): Promise<MaterialResponse[]> => {
+export const getAllMaterials = async (classId: number): Promise<MaterialResponse[]> => {
   const materials = await prisma.material.findMany({
+    where: {
+      classId,
+    },
     include: {
       uploader: {
         select: {
@@ -86,14 +92,17 @@ export const getAllMaterials = async (): Promise<MaterialResponse[]> => {
 
 /**
  * Get materials filtered by category
+ * @param classId - Class ID
  * @param category - Category to filter by
  * @returns Promise resolving to array of materials in the specified category
  */
 export const getMaterialsByCategory = async (
+  classId: number,
   category: string
 ): Promise<MaterialResponse[]> => {
   const materials = await prisma.material.findMany({
     where: {
+      classId,
       category,
     },
     include: {

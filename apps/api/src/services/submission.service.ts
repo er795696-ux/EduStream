@@ -139,12 +139,8 @@ export const gradeSubmission = async (
     throw error;
   }
 
-  // Check if teacher owns the assignment
-  if (submission.assignment.teacherId !== teacherId) {
-    const error = new Error('You do not have permission to grade this submission') as any;
-    error.statusCode = 403;
-    throw error;
-  }
+  // Ownership check moved to controller/middleware
+
 
   // Update the grade
   const updatedSubmission = await prisma.submission.update({

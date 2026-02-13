@@ -9,6 +9,7 @@ import announcementRoutes from "./routes/announcement.routes";
 import materialRoutes from "./routes/material.routes";
 import assignmentRoutes from "./routes/assignment.routes";
 import submissionRoutes from "./routes/submission.routes";
+import classRoutes from "./routes/class.routes";
 
 const app = express();
 
@@ -81,6 +82,7 @@ app.get("/health", (req: Request, res: Response) => {
 
 // Mount route modules
 app.use("/api/auth", authRoutes);
+app.use("/api/classes", classRoutes);
 app.use("/api/announcements", announcementRoutes);
 app.use("/api/materials", materialRoutes);
 app.use("/api/assignments", assignmentRoutes);
@@ -96,7 +98,6 @@ app.use((req: Request, res: Response) => {
   });
 });
 
-// Global error handler middleware (must be last)
 app.use(errorHandler);
 
 export default app;

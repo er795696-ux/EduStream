@@ -1,3 +1,4 @@
+// ... imports
 import { Router } from 'express';
 import {
   createSubmissionController,
@@ -6,7 +7,6 @@ import {
   getStudentSubmissionsController,
 } from '../controllers/submission.controller';
 import { authenticate } from '../middleware/auth.middleware';
-import { requireRole } from '../middleware/rbac.middleware';
 import { uploadSubmission } from '../middleware/upload.middleware';
 
 const router = Router();
@@ -14,12 +14,11 @@ const router = Router();
 /**
  * @route POST /api/assignments/:id/submit
  * @desc Submit an assignment
- * @access Private (Students only)
+ * @access Private (Class Members only - verified in controller)
  */
 router.post(
   '/assignments/:id/submit',
   authenticate,
-  requireRole(['STUDENT']),
   uploadSubmission.single('file'),
   createSubmissionController
 );
@@ -27,37 +26,35 @@ router.post(
 /**
  * @route GET /api/assignments/:id/submissions
  * @desc Get all submissions for an assignment
- * @access Private (Teachers only)
+ * @access Private (Class Teachers only - verified in controller)
  */
 router.get(
   '/assignments/:id/submissions',
   authenticate,
-  requireRole(['TEACHER']),
   getSubmissionsByAssignmentController
 );
 
 /**
  * @route PATCH /api/submissions/:id/grade
  * @desc Grade a submission
- * @access Private (Teachers only)
+ * @access Private (Class Teachers only - verified in controller)
  */
 router.patch(
   '/submissions/:id/grade',
   authenticate,
-  requireRole(['TEACHER']),
   gradeSubmissionController
 );
 
 /**
  * @route GET /api/submissions/my-submissions
  * @desc Get all submissions for the authenticated student
- * @access Private (Students only)
+ * @access Private (Authenticated users)
  */
 router.get(
   '/submissions/my-submissions',
   authenticate,
-  requireRole(['STUDENT']),
   getStudentSubmissionsController
 );
+
 
 export default router;

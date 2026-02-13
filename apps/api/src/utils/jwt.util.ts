@@ -4,7 +4,6 @@ import { config } from '../config/env';
 export interface JWTPayload {
   userId: number;
   email: string;
-  role: 'TEACHER' | 'STUDENT';
 }
 
 /**

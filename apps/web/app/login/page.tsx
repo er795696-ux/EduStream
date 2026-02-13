@@ -16,7 +16,6 @@ const LoginPage = () => {
 
 
     const [state, formAction, pending] = useActionState(LoginAction, initialState)
-    console.log(state);
 
     return (
         <div className="min-h-screen gradient-bg dark:bg-dark bg-slate-50 flex flex-col items-center justify-center px-4 py-8">

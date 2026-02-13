@@ -1,13 +1,12 @@
 import { prisma } from '../../lib/prisma';
 import { hashPassword, comparePassword } from '../utils/password.util';
 import { generateToken } from '../utils/jwt.util';
-import { Role } from '../generated/prisma/client';
+import { ThrowError } from '../utils/ThrowError';
 
 export interface RegisterDTO {
   name: string;
   email: string;
   password: string;
-  role: Role;
 }
 
 export interface LoginDTO {
@@ -21,7 +20,6 @@ export interface AuthResponse {
     id: number;
     name: string;
     email: string;
-    role: string;
   };
 }
 
@@ -38,9 +36,7 @@ export const register = async (data: RegisterDTO): Promise<AuthResponse> => {
   });
 
   if (existingUser) {
-    const error = new Error('Email already registered') as any;
-    error.statusCode = 409;
-    throw error;
+    ThrowError(409, "User already exists")
   }
 
   // Hash the password
@@ -52,7 +48,6 @@ export const register = async (data: RegisterDTO): Promise<AuthResponse> => {
       name: data.name,
       email: data.email,
       password: hashedPassword,
-      role: data.role,
     },
   });
 
@@ -60,7 +55,6 @@ export const register = async (data: RegisterDTO): Promise<AuthResponse> => {
   const token = generateToken({
     userId: user.id,
     email: user.email,
-    role: user.role,
   });
 
   return {
@@ -69,7 +63,6 @@ export const register = async (data: RegisterDTO): Promise<AuthResponse> => {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role,
     },
   };
 };
@@ -105,7 +98,6 @@ export const login = async (data: LoginDTO): Promise<AuthResponse> => {
   const token = generateToken({
     userId: user.id,
     email: user.email,
-    role: user.role,
   });
 
   return {
@@ -114,7 +106,6 @@ export const login = async (data: LoginDTO): Promise<AuthResponse> => {
       id: user.id,
       name: user.name,
       email: user.email,
-      role: user.role,
     },
   };
 };
