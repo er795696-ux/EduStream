@@ -181,6 +181,7 @@ const SignupPage = () => {
                         <button
                             type="submit"
                             className="w-full bg-main hover:bg-main/90 text-white font-bold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg shadow-main/30 hover:shadow-main/50"
+                            disabled={pending}
                         >
                             Create Account
                         </button>
