@@ -12,7 +12,7 @@ import Input from '@/components/ui/Input'
 import PasswordInput from '@/components/ui/PasswordInput'
 import Image from 'next/image'
 import { useRouter } from 'next/navigation'
-
+import { gsap } from 'gsap'
 
 const initialState: loginReturnAction = {
     errors: {},
@@ -34,7 +34,8 @@ const LoginPage = () => {
 
     const router = useRouter()
 
-
+    // Add a ref for the success image
+    const imageRef = useRef<HTMLImageElement | null>(null);
 
     useToastAction<loginReturnAction>({
         state: state,
@@ -65,6 +66,38 @@ const LoginPage = () => {
             if (audio.current)
                 audio.current.play();
             setSuccessFullLogin(true);
+
+            if (imageRef.current) {
+                // Only require gsap on the client side
+                gsap.set(imageRef.current, { rotate: 0, x: -400, y: -100, scale: 0.6 });
+                gsap.to(imageRef.current, {
+                    opacity: 1,
+                    duration: 0.6,
+                    scale: 1.5,
+                    rotate: 720,
+                    x: 0,
+                    y: 0,
+                    ease: "elastic.out(1,0.6)"
+                });
+                gsap.to(imageRef.current, {
+                    rotate: 1080,
+                    y: -30,
+                    x: 900,
+                    delay: 1.5,
+                    duration: 0.7,
+                    scale: 1,
+                    ease: "back.inOut(2)"
+                });
+                gsap.to(imageRef.current, {
+                    rotate: 0,
+                    y: -70,
+                    x: 100,
+                    delay: 4,
+                    duration: 0.7,
+                    scale: 1,
+                    ease: "back.inOut"
+                });
+            }
 
             // Delay for 5 seconds before routing
             timeoutId = setTimeout(() => {
@@ -199,8 +232,10 @@ const LoginPage = () => {
                 </p>
             </div>
             <Image
+                ref={imageRef}
                 hidden={!SuccessFullLogin}
                 src={'/happy-cat.gif'} width={100} height={100} alt='success cat meme'
+                className='absolute left-64'
             />
 
             <audio ref={audio}>
