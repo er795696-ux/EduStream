@@ -23,8 +23,6 @@ const initialState: loginReturnAction = {
 }
 
 const LoginPage = () => {
-    const [showPassword, setShowPassword] = React.useState(false)
-
 
     const [state, formAction, pending] = useActionState(LoginAction, initialState)
 
