@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useActionState } from 'react'
+import React, { useActionState, useEffect, useRef, useState } from 'react'
 import Logo from '@/components/ui/Logo'
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
@@ -10,6 +10,8 @@ import { useToastAction } from '@/hooks/useToast'
 import toast from 'react-hot-toast'
 import Input from '@/components/ui/Input'
 import PasswordInput from '@/components/ui/PasswordInput'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 
 const initialState: loginReturnAction = {
@@ -26,12 +28,22 @@ const LoginPage = () => {
 
     const [state, formAction, pending] = useActionState(LoginAction, initialState)
 
+    const [SuccessFullLogin, setSuccessFullLogin] = useState(false)
+
+    const audio = useRef<HTMLAudioElement | null>(null)
+
+    const router = useRouter()
+
+
+
     useToastAction<loginReturnAction>({
         state: state,
         pending,
         onSuccess: () => {
-            toast.dismiss('signup-loading');
-            toast.success('Logged-in successfully!');
+            if (state.success)
+                toast.success('Logged-in successfully!', {
+                    id: "success-toast"
+                });
         },
         onError: () => {
             if (state.success) return
@@ -47,9 +59,28 @@ const LoginPage = () => {
         }
     })
 
+    useEffect(() => {
+        let timeoutId: NodeJS.Timeout;
+        if (!!state.success) {
+            if (audio.current)
+                audio.current.play();
+            setSuccessFullLogin(true);
+
+            // Delay for 5 seconds before routing
+            timeoutId = setTimeout(() => {
+                router.push('/')
+            }, 7000);
+        }
+        return () => {
+            if (audio.current)
+                audio.current.pause();
+
+            if (timeoutId) clearTimeout(timeoutId);
+        };
+    }, [state.success]);
 
     return (
-        <div className="min-h-screen gradient-bg dark:bg-dark bg-slate-50 flex flex-col items-center justify-center px-4 py-8">
+        <div className="min-h-screen gradient-bg dark:bg-dark bg-slate-50 flex flex-col items-center justify-center px-4 py-8 relative">
             {/* Logo */}
             <div className="mb-8">
                 <Logo />
@@ -167,6 +198,14 @@ const LoginPage = () => {
                     <a href="#" className="text-main hover:text-main/80">Privacy Policy</a>
                 </p>
             </div>
+            <Image
+                hidden={!SuccessFullLogin}
+                src={'/happy-cat.gif'} width={100} height={100} alt='success cat meme'
+            />
+
+            <audio ref={audio}>
+                <source src='/happy.mp3' type='audio/mp3' />
+            </audio>
         </div>
     )
 }
